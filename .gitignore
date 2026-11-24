@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.local
+dist
+.DS_Store
+*.log
+
+# Outdated one-off preview build; production uses React source + Vite
+ready-upload/
