@@ -19,3 +19,25 @@
 .sample-chip{display:inline-flex;align-items:center;border:1px solid rgba(44,37,60,.18);background:rgba(255,255,255,.6);border-radius:100px;padding:3px 8px;font-size:10px;font-weight:800;letter-spacing:.02em;margin-left:auto;white-space:nowrap}.note-card-top{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.note-card-top .bookmark-button{margin-left:auto}.footer a:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #8d65d6;outline-offset:3px}.notes-filter-tip{font-size:12px;color:var(--muted,#76717c);padding:8px 2px}.sample-disclaimer{font-size:12px;color:#6c6083;margin-top:8px}
 
 .filter-fields{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+
+/* NotesHub v3: social login, accessible account menu and ExamBrain-style PWA banner */
+.social-auth-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:18px}
+.social-auth-button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:9px 7px;font-size:12px;white-space:nowrap}
+.social-auth-button:disabled{opacity:.5;cursor:not-allowed}
+.social-help{font-size:11px!important;color:var(--muted);margin:8px 0 0!important}
+.account-menu-wrap{position:relative;display:flex;align-items:center}
+.account-trigger{border:0;display:flex;align-items:center;justify-content:center;gap:2px;width:auto;min-width:42px;padding:0 8px;background:var(--lavender)}
+.account-menu{position:absolute;right:0;top:calc(100% + 12px);z-index:110;min-width:224px;padding:8px;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:0 18px 45px rgba(24,21,42,.16);display:flex;flex-direction:column}
+.account-menu-email{padding:12px 10px;font-size:11px;color:var(--muted);word-break:break-word;border-bottom:1px solid var(--line);margin-bottom:6px}
+.account-menu>a,.account-menu>button{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:8px;background:transparent;color:var(--text);font-size:13px;font-weight:650;text-align:left;padding:11px 12px}
+.account-menu>a:hover,.account-menu>button:hover{background:var(--surface2)}
+.account-menu .account-signout{color:#a23d49;border-top:1px solid var(--line);border-radius:0;margin-top:4px}
+.pwa-install-banner{position:fixed;z-index:180;bottom:22px;right:20px;width:min(465px,calc(100% - 28px));display:flex;align-items:center;gap:11px;padding:13px;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:16px;box-shadow:0 15px 45px rgba(31,25,45,.2)}
+.pwa-install-banner img{flex-shrink:0;width:44px;height:44px;object-fit:contain}
+.pwa-install-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pwa-install-copy strong{font-size:13px}
+.pwa-install-copy span{font-size:11px;color:var(--muted);line-height:1.4}
+.pwa-install-banner>.btn{font-size:11px;padding:9px 11px;min-height:37px}
+@media(max-width:480px){.social-auth-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.social-auth-button{font-size:11px;padding:7px 4px}.pwa-install-banner{right:14px;bottom:14px;padding:10px;gap:7px}.pwa-install-banner img{width:34px;height:34px}.pwa-install-banner .btn{padding:7px}.account-menu{right:-5px;max-width:calc(100vw - 24px)}}
+.mobile-menu>button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:0;background:transparent;color:var(--text);font-weight:650;font-size:13px;padding:11px 14px}
+.mobile-menu>button:hover{background:var(--surface2)}

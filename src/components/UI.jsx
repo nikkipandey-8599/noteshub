@@ -1,30 +1,45 @@
-import React,{useEffect,useMemo,useState}from'react';import{Link,useLocation,useNavigate}from'react-router-dom';
-import{Archive,ArrowDownToLine,ArrowRight,BookMarked,BookOpen,Bookmark,Check,ChevronDown,ChevronLeft,ChevronRight,CloudUpload,Command,Compass,Download,Eye,FileText,FolderHeart,GraduationCap,Heart,Home,Info,Layers3,LayoutDashboard,Menu,Moon,Plus,Search,Settings,ShieldCheck,Smartphone,Sun,Upload,UserRound,WifiOff,X}from'lucide-react';
+import React,{useEffect,useMemo,useRef,useState}from'react';import{Link,useLocation,useNavigate}from'react-router-dom';
+import{Archive,ArrowDownToLine,ArrowRight,BookMarked,BookOpen,Bookmark,Check,ChevronDown,ChevronLeft,ChevronRight,CloudUpload,Command,Compass,Download,Eye,FileText,FolderHeart,GraduationCap,Heart,Home,Info,Layers3,LayoutDashboard,Menu,Moon,Plus,Search,Settings,ShieldCheck,Smartphone,Sun,Upload,UserRound,LogOut,WifiOff,X}from'lucide-react';
 import{useApp}from'../context/AppContext';import{prettyDate}from'../lib/supabase';
+import InstallBanner from './InstallBanner';
+import {usePWAInstall} from '../hooks/usePWAInstall';
 export function Logo({small=false}){return <Link to="/" className={'logo '+(small?'small':'')} aria-label="NotesHub home"><img src="/icons/icon-192.png" alt=""/><span>Notes<span className="logo-accent">Hub</span><i>.</i></span></Link>}
 export function Button({children,variant='primary',className='',...props}){return <button className={`btn btn-${variant} ${className}`} {...props}>{children}</button>}
 export function Pill({children,color='lavender',className=''}){return <span className={`pill pill-${color} ${className}`}>{children}</span>}
 export function Empty({icon:Icon=FileText,title='Nothing here yet',text,action}){return <div className="empty"><div className="empty-icon"><Icon size={27}/></div><h3>{title}</h3><p>{text||'Try a different search or explore another category.'}</p>{action}</div>}
 export function Layout({children}){
- const{theme,setTheme,session,configured,toast,clearToast}=useApp();const[mobile,setMobile]=useState(false);const[installPrompt,setInstallPrompt]=useState(null);const[isStandalone,setStandalone]=useState(false);
+ const{theme,setTheme,session,configured,toast,clearToast,isAdmin,supabase,notify}=useApp();const[mobile,setMobile]=useState(false);const[accountOpen,setAccountOpen]=useState(false);const accountRef=useRef(null);const{canInstall,install}=usePWAInstall();
  const loc=useLocation(),nav=useNavigate();const[query,setQuery]=useState('');
- useEffect(()=>{setMobile(false);window.scrollTo({top:0,behavior:'instant'})},[loc.pathname]);
- useEffect(()=>{setStandalone(window.matchMedia('(display-mode: standalone)').matches);const handler=e=>{e.preventDefault();window.__noteshubInstallPrompt=e;setInstallPrompt(e)};window.addEventListener('beforeinstallprompt',handler);return()=>window.removeEventListener('beforeinstallprompt',handler)},[]);
- useEffect(()=>{const handler=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();document.getElementById('nav-search')?.focus()}if(e.key==='Escape')setMobile(false)};document.addEventListener('keydown',handler);return()=>document.removeEventListener('keydown',handler)},[]);
+ useEffect(()=>{setMobile(false);setAccountOpen(false);window.scrollTo({top:0,behavior:'auto'})},[loc.pathname]);
+ useEffect(()=>{const close=e=>{if(accountRef.current&&!accountRef.current.contains(e.target))setAccountOpen(false)};document.addEventListener('pointerdown',close);return()=>document.removeEventListener('pointerdown',close)},[]);
+ useEffect(()=>{const handler=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();document.getElementById('nav-search')?.focus()}if(e.key==='Escape'){setMobile(false);setAccountOpen(false)}};document.addEventListener('keydown',handler);return()=>document.removeEventListener('keydown',handler)},[]);
  const doSearch=e=>{e.preventDefault();nav(`/explore?q=${encodeURIComponent(query)}`)};
+ const logOut=async()=>{if(!supabase)return;const{error}=await supabase.auth.signOut();if(error){notify(error.message,'error');return}setAccountOpen(false);setMobile(false);nav('/',{replace:true})};
  const links=[{path:'/explore',text:'Explore notes'},{path:'/subjects',text:'Subjects'},{path:'/requests',text:'Requests'},{path:'/guides',text:'Guides'}];
  return <div className="site-frame">
  <header className="nav"><div className="nav-inner"><Logo/><div className="nav-links">{links.map(l=><Link key={l.path} to={l.path} className={loc.pathname.startsWith(l.path)?'nav-active':''}>{l.text}</Link>)}</div>
  <form className="nav-search" onSubmit={doSearch}><Search size={18}/><input id="nav-search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search your next a-ha moment..." aria-label="Search notes"/><kbd>⌘ K</kbd></form>
  <div className="nav-actions"><button className="icon-button theme-button" onClick={()=>setTheme(theme==='light'?'dark':'light')} aria-label="Toggle theme">{theme==='light'?<Moon size={19}/>:<Sun size={19}/>}</button>
- {installPrompt&&!isStandalone&&<Button variant="outline" className="desktop-install" onClick={async()=>{installPrompt.prompt();await installPrompt.userChoice;setInstallPrompt(null)}}><Download size={16}/> Install</Button>}
- {session?<Link to="/dashboard" className="avatar" title="Your dashboard">{session.user.email?.[0]?.toUpperCase()}</Link>:<Link className="btn btn-primary login-btn" to="/login">Get started <ArrowRight size={16}/></Link>}
+ {canInstall&&<Button variant="outline" className="desktop-install" onClick={install}><Download size={16}/> Install</Button>}
+ {session?<div className="account-menu-wrap" ref={accountRef}>
+ <button type="button" className="avatar account-trigger" aria-haspopup="menu" aria-expanded={accountOpen} aria-label="Open account menu" onClick={()=>setAccountOpen(v=>!v)}>{session.user.email?.[0]?.toUpperCase()}<ChevronDown size={13}/></button>
+ {accountOpen&&<div className="account-menu" role="menu">
+ <div className="account-menu-email" title={session.user.email}>{session.user.email}</div>
+ <Link role="menuitem" to="/dashboard"><LayoutDashboard size={16}/> Dashboard</Link>
+ <Link role="menuitem" to="/library"><FolderHeart size={16}/> My library</Link>
+ <Link role="menuitem" to="/upload"><Upload size={16}/> Upload notes</Link>
+ <Link role="menuitem" to="/profile"><UserRound size={16}/> Profile settings</Link>
+ {isAdmin&&<Link role="menuitem" to="/admin"><ShieldCheck size={16}/> Moderation</Link>}
+ <button type="button" role="menuitem" className="account-signout" onClick={logOut}><LogOut size={16}/> Log out</button>
+ </div>}
+ </div>:<Link className="btn btn-primary login-btn" to="/login">Get started <ArrowRight size={16}/></Link>}
  <button className="icon-button hamburger" aria-label="Open menu" onClick={()=>setMobile(!mobile)}>{mobile?<X/>:<Menu/>}</button></div></div></header>
- {mobile&&<div className="mobile-menu">{links.map(l=><Link key={l.path} to={l.path}>{l.text}</Link>)}<Link to="/upload">Upload notes</Link><Link to="/dashboard">My dashboard</Link><Link to="/install">Install app</Link></div>}
+ {mobile&&<div className="mobile-menu">{links.map(l=><Link key={l.path} to={l.path}>{l.text}</Link>)}<Link to="/upload">Upload notes</Link><Link to="/dashboard">My dashboard</Link><Link to="/install">Install app</Link>{session&&<button type="button" onClick={logOut}><LogOut size={16}/> Log out</button>}</div>}
  {!configured&&<div className="demo-strip"><Info size={14}/><span><strong>Preview mode:</strong> sample PDFs work now. Connect Supabase to enable student accounts and public uploads.</span><Link to="/guides#setup">Setup guide <ArrowRight size={13}/></Link></div>}
  <main>{children}</main>
  <footer className="footer"><div className="footer-grid"><div><Logo/><p>A little deck of big ideas. A calmer space to discover, save, and share student study material.</p><div className="footer-chip">Made for students, with care <Heart size={13}/></div></div><div><h4>Explore</h4><Link to="/explore">All notes</Link><Link to="/subjects">Subjects</Link><Link to="/requests">Note requests</Link><Link to="/guides">Study guides</Link></div><div><h4>Your space</h4><Link to="/dashboard">Dashboard</Link><Link to="/library">Saved notes</Link><Link to="/upload">Upload notes</Link><Link to="/install">Install app</Link></div><div><h4>Information</h4><Link to="/about">About & FAQ</Link><Link to="/policies">Privacy & Terms</Link><Link to="/policies#copyright">Copyright requests</Link><a href="https://github.com/nikkipandey-8599" target="_blank" rel="noopener noreferrer">Built by Nikki Pandey ↗</a></div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} NotesHub. An original learning project.</span><a href="https://github.com/nikkipandey-8599" target="_blank" rel="noopener noreferrer">Made by Nikki Pandey ↗</a></div></footer>
  {toast&&<div className={`toast toast-${toast.type}`} role="status"><span>{toast.message}</span><button onClick={clearToast} aria-label="Dismiss notification"><Check size={15}/></button></div>}
+ <InstallBanner/>
  <EdgeDeck/>
  </div>
 }
