@@ -7,3 +7,4 @@ dist
 
 # Outdated one-off preview build; production uses React source + Vite
 ready-upload/
+.noteshub-upgrade-backup-*/

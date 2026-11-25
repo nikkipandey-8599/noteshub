@@ -96,7 +96,7 @@ export function AppProvider({children}){
   const{data,error}=await supabase.storage.from('note-pdfs').createSignedUrl(note.file_path,120);
   if(error)throw error;return data.signedUrl;
  };
- const recordDownload=async(note)=>{if(note.is_starter||!configured)return;await supabase.rpc('increment_note_download',{target_id:note.id})};
+ const recordDownload=async(note)=>{if(note.is_starter||!configured||!userId||note.status!=='approved')return;const {error}=await supabase.rpc('increment_note_download',{target_id:note.id});if(error)console.warn('Download counter:',error.message)};
  const submitRating=async(noteId,rating)=>{
   if(!requireAccount())throw Error('Sign in to rate notes');
   const{error}=await supabase.from('ratings').upsert({note_id:noteId,user_id:userId,value:rating},{onConflict:'note_id,user_id'});

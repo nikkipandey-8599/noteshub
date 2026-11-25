@@ -27,3 +27,5 @@ React 18 · Vite 6 · Supabase Auth, Postgres and Storage · Cloudflare Workers 
 npm install
 cp .env.example .env.local
 npm run dev
+## Launch upgrade
+Optional GA4 analytics, private feedback, offline public PDFs, improved search, and generated public note metadata. Apply `supabase/migrations/20261125_launch.sql` to the existing database before deploying. Set VITE_SITE_URL and optional VITE_GA_MEASUREMENT_ID in the build environment.

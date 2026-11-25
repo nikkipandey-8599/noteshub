@@ -9,3 +9,21 @@
   Content-Type: application/manifest+json
 /sw.js
   Cache-Control: no-store
+/dashboard*
+  X-Robots-Tag: noindex
+/profile*
+  X-Robots-Tag: noindex
+/library*
+  X-Robots-Tag: noindex
+/admin*
+  X-Robots-Tag: noindex
+/login*
+  X-Robots-Tag: noindex
+/register*
+  X-Robots-Tag: noindex
+/reset-password*
+  X-Robots-Tag: noindex
+/upload*
+  X-Robots-Tag: noindex
+/offline*
+  X-Robots-Tag: noindex

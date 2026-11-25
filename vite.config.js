@@ -39,5 +39,6 @@ export default defineConfig({
       },
     }),
   ],
+  build: { rollupOptions: { output: { manualChunks(id) { if (id.includes('node_modules/@supabase/')) return 'supabase'; if (/node_modules[/\\](react|react-dom|scheduler|react-router|react-router-dom)[/\\]/.test(id)) return 'react-vendor'; } } } },
   server: { host: '0.0.0.0' },
 });

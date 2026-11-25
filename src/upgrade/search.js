@@ -1,0 +1,4 @@
+const normal=s=>String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ').trim();
+const aliases={dbms:'database management',dsa:'data structures algorithms',cn:'computer networks',os:'operating systems',js:'javascript',bscit:'bsc it'};
+function oneEdit(a,b){if(Math.abs(a.length-b.length)>1)return false;if(a.length>b.length)[a,b]=[b,a];let i=0,j=0,errors=0;while(i<a.length&&j<b.length){if(a[i]===b[j]){i++;j++}else{if(++errors>1)return false;if(a.length===b.length)i++;j++}}return errors+(b.length-j)<=1}
+export function matchesQuery(haystack,query){const h=normal(haystack),words=h.split(/\s+/);return normal(query).split(/\s+/).filter(Boolean).every(t=>h.includes(t)||(aliases[t]&&aliases[t].split(' ').every(w=>h.includes(w)))||(t.length>=5&&words.some(w=>oneEdit(t,w))))}
