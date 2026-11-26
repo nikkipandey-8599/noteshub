@@ -1,3 +1,5 @@
+import {categoryKey,categoryOptions,normalized} from '../lib/library';
+import {LibrarySkeleton} from '../components/LibraryExtras';
 import{FinalReadingShelf,PublicReviewShelf}from'../upgrade/FinalPages';
 import{ReadingShelf}from'../upgrade/UpgradePages';import{matchesQuery}from'../upgrade/search';
 import React,{useMemo,useState}from'react';import{Link,useNavigate,useParams,useSearchParams}from'react-router-dom';
@@ -9,8 +11,8 @@ function listSubjects(notes){
  const map=new Map(subjects.map(s=>[s.name.toLocaleLowerCase(),{...s,count:0}]));
  for(const n of notes){
   if(n.status!=='approved'||!n.subject?.trim())continue;
-  const key=n.subject.trim().toLocaleLowerCase();
-  if(!map.has(key))map.set(key,{name:n.subject.trim(),slug:slugify(n.subject)||encodeURIComponent(n.subject.trim()),color:colors[map.size%colors.length],blurb:'Community learning notes on '+n.subject.trim()+'.',count:0});
+  const key=categoryKey(n.subject);
+  if(!map.has(key))map.set(key,{name:normalized(n.subject),slug:slugify(n.subject)||encodeURIComponent(n.subject.trim()),color:colors[map.size%colors.length],blurb:'Community learning notes on '+n.subject.trim()+'.',count:0});
   map.get(key).count++;
  }
  return [...map.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
@@ -37,14 +39,14 @@ export function Explore({subjectFilter}){
  const sort=params.get('sort')||'newest';
  const type=params.get('type')||'all';
  const published=notes.filter(n=>n.status==='approved');
- const options=(field)=>[...new Set(published.map(n=>(n[field]||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+ const options=(field)=>categoryOptions(published,field);
  const setParam=(key,v)=>{const updated=new URLSearchParams(params);if(v==='all'||!v)updated.delete(key);else updated.set(key,v);if(key==='level')updated.delete('semester');setParams(updated)};
  const filtered=useMemo(()=>published.filter(n=>{
   const haystack=[n.title,n.description,n.subject,n.course,n.semester,n.college,...(n.tags||[])].join(' ').toLocaleLowerCase();
   return (!q||matchesQuery(haystack,q))
-   &&(selected==='all'||n.subject.toLocaleLowerCase()===selected.toLocaleLowerCase())
-   &&(course==='all'||n.course===course)
-   &&(level==='all'||n.semester===level)
+   &&(selected==='all'||categoryKey(n.subject)===categoryKey(selected))
+   &&(course==='all'||categoryKey(n.course)===categoryKey(course))
+   &&(level==='all'||categoryKey(n.semester)===categoryKey(level))
    &&(type==='all'||(type==='samples'?n.is_starter:!n.is_starter));
  }).sort((a,b)=>sort==='popular'?(b.downloads||0)-(a.downloads||0):sort==='title'?a.title.localeCompare(b.title):new Date(b.created_at)-new Date(a.created_at)),[notes,q,selected,course,level,type,sort]);
  return <div className="container listing-page">
@@ -60,7 +62,7 @@ export function Explore({subjectFilter}){
    </div>
   </div>
   <div className="results-head"><div><strong>{filtered.length}</strong> {filtered.length===1?'resource':'resources'} to explore</div>{(q||selected!=='all'||course!=='all'||level!=='all'||type!=='all')&&<button className="clear-link" onClick={()=>setParams({})}>Clear filters <X size={15}/></button>}</div>
-  {loading?<p className="state-note">Loading the library...</p>:filtered.length?<div className="notes-grid">{filtered.map((n,i)=><NoteCard note={n} key={n.id} index={i}/>)}</div>:<Empty icon={Search} title="No notes here just yet" text="Try different keywords, or request a new resource for this subject." action={<Link to="/requests" className="btn btn-outline">Request a note <ArrowRight size={16}/></Link>}/>}
+  {loading?<LibrarySkeleton/>:filtered.length?<div className="notes-grid">{filtered.map((n,i)=><NoteCard note={n} key={n.id} index={i}/>)}</div>:<Empty icon={Search} title="No notes here just yet" text="Try different keywords, or request a new resource for this subject." action={<Link to="/requests" className="btn btn-outline">Request a note <ArrowRight size={16}/></Link>}/>}
   <div className="bottom-note">✳ Know something worth sharing? <Link to="/upload">Add your notes to the library.</Link></div>
  </div>
 }

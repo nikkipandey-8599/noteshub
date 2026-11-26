@@ -1,3 +1,4 @@
+import {normalized,validatePdf} from '../lib/library';
 import React,{createContext,useCallback,useContext,useEffect,useMemo,useState} from 'react';
 import{configured,supabase,MAX_PDF_BYTES,slugify}from'../lib/supabase';
 import{starterNotes}from'../data/content';
@@ -68,20 +69,18 @@ export function AppProvider({children}){
  };
  const uploadNote=async({file,...metadata})=>{
   if(!requireAccount())throw Error('Sign in to upload notes');
-  if(!file||file.type!=='application/pdf'||!file.name.toLowerCase().endsWith('.pdf'))throw Error('Please select a valid PDF file');
-  if(file.size>MAX_PDF_BYTES)throw Error('Maximum upload size is 8 MB');
-  if(file.size===0)throw Error('Empty files cannot be uploaded');
-  const header=new Uint8Array(await file.slice(0,5).arrayBuffer());if(String.fromCharCode(...header)!=='%PDF-')throw Error('This file does not appear to be a valid PDF');
+  await validatePdf(file,MAX_PDF_BYTES);
+  if(metadata.title.trim().length<5||metadata.description.trim().length<10||normalized(metadata.subject).length<2)throw Error('Enter a valid title, description and subject.');
   const path=`${userId}/${crypto.randomUUID()}-${slugify(file.name.replace(/\.pdf$/i,''))}.pdf`;
   const{error:uploadError}=await supabase.storage.from('note-pdfs').upload(path,file,{contentType:'application/pdf',cacheControl:'3600',upsert:false});
   if(uploadError)throw uploadError;
-  const payload={title:metadata.title.trim(),description:metadata.description.trim(),subject:metadata.subject.trim(),course:metadata.course?.trim()||'General learning',semester:metadata.semester?.trim()||'Any level',college:metadata.college?.trim()||'',tags:metadata.tags||[],file_path:path,file_size:file.size,owner_id:userId,owner_name:profile?.display_name||session.user.email?.split('@')[0]||'Student',color:metadata.color||'lavender',status:'pending'};
+  const payload={title:metadata.title.trim(),description:metadata.description.trim(),subject:normalized(metadata.subject),course:normalized(metadata.course)||'General learning',semester:normalized(metadata.semester)||'Any level',college:metadata.college?.trim()||'',tags:metadata.tags||[],file_path:path,file_size:file.size,owner_id:userId,owner_name:'NotesHub contributor',color:metadata.color||'lavender',status:'pending'};
   const{error}=await supabase.from('notes').insert(payload);if(error){await supabase.storage.from('note-pdfs').remove([path]);throw error}
   await reload();notify('PDF submitted! An admin will review it before publication.','success');
  };
  const editNote=async(id,data)=>{
   if(!requireAccount())return;
-  const{error}=await supabase.from('notes').update({title:data.title,description:data.description,subject:data.subject.trim(),course:data.course?.trim()||'General learning',semester:data.semester?.trim()||'Any level',college:data.college?.trim()||'',tags:data.tags,color:data.color}).eq('id',id);
+  const{error}=await supabase.from('notes').update({title:data.title,description:data.description,subject:normalized(data.subject),course:normalized(data.course)||'General learning',semester:normalized(data.semester)||'Any level',college:data.college?.trim()||'',tags:data.tags,color:data.color}).eq('id',id);
   if(error)throw error;await reload();notify('Changes saved; note returned to review queue.','success');
  };
  const deleteNote=async(note)=>{
