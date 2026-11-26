@@ -30,7 +30,13 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/samples\//],
+        navigateFallbackDenylist: [
+  /^\/samples\//,
+  /^\/robots\.txt(?:\?.*)?$/,
+  /^\/sitemap\.xml(?:\?.*)?$/,
+  /^\/manifest\.webmanifest(?:\?.*)?$/,
+  /\.pdf(?:\?.*)?$/i,
+],
         runtimeCaching: [
           { urlPattern: /^https:\/\/[^/]+\.supabase\.co\//, handler: 'NetworkOnly' },
           { urlPattern: /\.pdf(?:\?.*)?$/i, handler: 'NetworkOnly' },

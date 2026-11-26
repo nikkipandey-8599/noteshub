@@ -27,3 +27,10 @@
   X-Robots-Tag: noindex
 /offline*
   X-Robots-Tag: noindex
+/robots.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: no-cache
+
+/sitemap.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: no-cache
