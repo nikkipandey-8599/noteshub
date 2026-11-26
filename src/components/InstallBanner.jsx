@@ -1,10 +1,12 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { Download, X } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export default function InstallBanner() {
   const { showBanner, install, dismiss } = usePWAInstall();
-  if (!showBanner) return null;
+  const { pathname } = useLocation();
+  if (!showBanner || pathname !== "/") return null;
   return <section className="pwa-install-banner" aria-label="Install NotesHub">
     <img src="/icons/icon-192.png" width="44" height="44" alt="" />
     <div className="pwa-install-copy"><strong>Take NotesHub with you ✳</strong>

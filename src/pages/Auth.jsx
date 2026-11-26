@@ -95,7 +95,7 @@ export function AuthPage({ register = false }) {
             aria-label={`Continue with ${provider.name}`}
           >{provider.icon}<span>{provider.name}</span></button>)}
         </div>
-        <p className="social-help">Social login works after each provider is enabled in Supabase.</p>
+        
         <div className="auth-separator">or use email</div>
       </>}
       <form className="auth-form" onSubmit={submit}>

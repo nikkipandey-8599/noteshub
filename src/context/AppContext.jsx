@@ -85,10 +85,12 @@ export function AppProvider({children}){
   if(error)throw error;await reload();notify('Changes saved; note returned to review queue.','success');
  };
  const deleteNote=async(note)=>{
-  if(!requireAccount())return;const{error}=await supabase.from('notes').delete().eq('id',note.id);if(error)throw error;
-  // Removing the file after the DB row is gone requires owner-path storage access.
-  const{error:storageError}=await supabase.storage.from('note-pdfs').remove([note.file_path]);if(storageError)console.warn('Storage clean-up:',storageError.message);
-  await reload();notify('Your note has been deleted.','success');
+  if(!configured||!userId||note.is_starter||(!isAdmin&&note.owner_id!==userId))throw Error('You cannot delete this note.');
+  const {data,error}=await supabase.from('notes').delete().eq('id',note.id).select('id').maybeSingle();
+  if(error)throw error;if(!data)throw Error('Note could not be deleted. Check your permissions.');
+  const {error:storageError}=await supabase.storage.from('note-pdfs').remove([note.file_path]);
+  setNotes(old=>old.filter(n=>n.id!==note.id));setBookmarks(old=>old.filter(id=>id!==note.id));setRecentIds(old=>old.filter(id=>id!==note.id));
+  await reload();notify(storageError?'Note removed from library; PDF storage cleanup needs administrator attention.':'Note deleted.','success');
  };
  const getPdfUrl=async(note)=>{
   if(note.is_starter)return note.file_path;
