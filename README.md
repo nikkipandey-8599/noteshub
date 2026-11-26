@@ -17,7 +17,7 @@ A calmer corner of the internet to discover, save and share free study notes.
 [![PWA](https://img.shields.io/badge/PWA-Installable-9574D0?style=for-the-badge)](https://noteshub.tech/install)
 [![MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-**[Explore notes](https://noteshub.tech/explore) · [Browse subjects](https://noteshub.tech/subjects) · [Install app](https://noteshub.tech/install) · [Share feedback](https://noteshub.tech/feedback)**
+**[Community](https://noteshub.tech/community) · [Explore notes](https://noteshub.tech/explore) · [Browse subjects](https://noteshub.tech/subjects) · [Install app](https://noteshub.tech/install) · [Share feedback](https://noteshub.tech/feedback)**
 
 </div>
 
@@ -51,15 +51,27 @@ Browse and preview approved resources without an account, or sign in to build yo
 - Personal dashboard, bookmarks, collections and recently viewed notes.
 - Continue reading and trending resources when data is available.
 - Responsive navigation and profile-menu logout.
+- Mobile layout refinements for decorative cards, controls and smaller screens.
+- Loading skeletons and related study resources.
 
 ### 3. Community contributions
 - Upload, edit and submit PDFs for moderation.
 - Per-file upload limit of 8 MB.
 - Note requests, ratings, comments and reporting tools.
 - Admin-only bulk upload of up to 50 PDFs per batch, followed by moderation.
+- Note owners can edit or delete their own notes; admins can moderate, recategorize and delete submissions.
 - Contributors must own the material or have permission to distribute it.
 
-### 4. Feedback and moderation
+### 4. Meet the community
+
+- [Community Contributors](https://noteshub.tech/community) — discover learners with approved public notes.
+- Search by public nickname or subject; sort by name, published notes or recorded downloads.
+- Individual contributor pages show approved resources and aggregate contribution statistics.
+- Optional public nickname in My profile, with a generated initial avatar. No public nickname is required.
+- Visible contributor button on note pages and a community link in the footer.
+- Private account details are not used as the public directory identity.
+
+### 5. Feedback and moderation
 - Five-star ratings, general reviews, app feedback, feature suggestions and bug reports.
 - Public reviews require explicit publication consent and administrator approval.
 - Public review summaries, rating distribution, sorting and pagination.
@@ -67,13 +79,13 @@ Browse and preview approved resources without an account, or sign in to build yo
 - Admin dashboard for moderation, feedback status, publishing, unpublishing and deletion.
 - Statistics for approved notes, registered users, eligible signed-in downloads and feedback ratings.
 
-### 5. Progressive Web App
+### 6. Progressive Web App
 - Install on supported mobile and desktop browsers.
 - Service-worker caching for the app shell.
 - Save up to 15 approved PDFs for offline access on supported browsers.
 - Offline files remain on the device and may be cleared by browser storage management.
 
-### 6. Search visibility and analytics
+### 7. Search visibility and analytics
 - Build-generated XML sitemap and robots.txt.
 - Public note and subject pages with page-specific metadata, canonical URLs and structured data.
 - Permanent redirect from the legacy Workers hostname to the custom domain.
@@ -145,7 +157,11 @@ Never expose a service-role key or other private credential in a Vite environmen
 
 1. Create a Supabase project.
 2. Run [supabase/schema.sql](supabase/schema.sql) once for a new database.
-3. Apply [the launch migration](supabase/migrations/20261125_launch.sql), then [the final polish migration](supabase/migrations/20261125_final_polish.sql), in order.
+3. Apply the migrations in this order:
+   - [Launch](supabase/migrations/20261125_launch.sql)
+   - [Final polish](supabase/migrations/20261125_final_polish.sql)
+   - [Upload guard](supabase/migrations/20261126_upload_guard.sql)
+   - [Community directory](supabase/migrations/20261126_community.sql)
 4. Configure Authentication → URL Configuration and the intended sign-in providers.
 5. Register an account and follow the [Supabase setup guide](supabase/README.md) to grant administrator access.
 6. Test permissions with both an ordinary account and an administrator account.
@@ -229,15 +245,21 @@ noteshub/
 
 ## Pre-launch roadmap
 
+_Last updated: November 26, 2026. Implemented features are distinct from completed production acceptance tests._
+
 - [x] Core learning library and study workspace
 - [x] Moderation, reviews and bulk uploads
 - [x] PWA and selected offline PDFs
 - [x] Custom domain and production deployment
 - [x] Sitemap, robots.txt and analytics integration
+- [x] Responsive layout refinements and contributor directory implemented
+- [x] Owner/admin note deletion and moderation controls implemented
+- [ ] Verify public contributor identity and directory against production Supabase
 - [ ] Refine remaining UI and user experience
 - [ ] Expand and organize authorized learning resources
 - [ ] Complete cross-device, authentication and permissions testing
 - [ ] Review abuse prevention and operational safeguards
+- [ ] Confirm Google indexing and review search performance
 - [ ] Official release and community promotion
 
 ## Contributing
