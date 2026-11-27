@@ -57,7 +57,7 @@ export function AppProvider({children}){
  },[userId]);
  useEffect(()=>{localStorage.setItem('noteshub-bookmarks',JSON.stringify(localBookmarks))},[localBookmarks]);
  useEffect(()=>{localStorage.setItem('noteshub-recent',JSON.stringify(recentIds))},[recentIds]);
- useEffect(()=>{if(configured)setBookmarks(old=>[...new Set([...old.filter(id=>String(id).startsWith('starter-')),...localBookmarks.filter(id=>String(id).startsWith('starter-'))])])},[configured,localBookmarks]);
+ useEffect(()=>{if(configured)setBookmarks(old=>[...new Set([...old.filter(id=>!String(id).startsWith('starter-')),...localBookmarks.filter(id=>String(id).startsWith('starter-'))])])},[configured,localBookmarks]);
  const requireAccount=()=>{if(!configured){notify('Connect Supabase to enable real accounts and community uploads.','warning');return false}if(!userId){notify('Sign in to use this feature.','warning');return false}return true};
  const toggleBookmark=async noteId=>{
   if(!configured||String(noteId).startsWith('starter-')){setBookmarks(old=>old.includes(noteId)?old.filter(id=>id!==noteId):[...old,noteId]);setLocalBookmarks(old=>old.includes(noteId)?old.filter(id=>id!==noteId):[...old,noteId]);notify('Your starter note bookmark was updated');return}
