@@ -9,7 +9,7 @@
 A calmer corner of the internet to discover, save and share free study notes.
 
 [![Live website](https://img.shields.io/badge/Live%20Website-noteshub.tech-9574D0?style=for-the-badge)](https://noteshub.tech)
-[![Status](https://img.shields.io/badge/Status-Pre--launch-F5DF9A?style=for-the-badge)](https://noteshub.tech)
+[![Status](https://img.shields.io/badge/Release-v2.2.0-22c55e?style=for-the-badge)](https://noteshub.tech)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite)](https://vite.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-Database%20%26%20Auth-3FCF8E?style=for-the-badge&logo=supabase)](https://supabase.com)
@@ -29,7 +29,7 @@ NotesHub is an independently developed, student-focused learning library for ori
 
 Browse and preview approved resources without an account, or sign in to build your own library and contribute notes. A paper-inspired interface combines soft pastel colors, thoughtful typography and light and dark themes.
 
-> The website is live in pre-launch development. Features and content are still being refined before wider promotion.
+> NotesHub is live and ready for its initial public launch. As verified on November 27, 2026, the production library contains 58 approved community PDFs, including 50 original introductory revision sheets, plus six built-in sample PDFs. Counts may change over time.
 
 ## Features
 
@@ -59,6 +59,7 @@ Browse and preview approved resources without an account, or sign in to build yo
 - Per-file upload limit of 8 MB.
 - Note requests, ratings, comments and reporting tools.
 - Admin-only bulk upload of up to 50 PDFs per batch, followed by moderation.
+- One-click starter library importer generates 50 original revision sheets across ten IT subjects, with deterministic file paths, retry support and pending moderation.
 - Note owners can edit or delete their own notes; admins can moderate, recategorize and delete submissions.
 - Contributors must own the material or have permission to distribute it.
 
@@ -86,7 +87,7 @@ Browse and preview approved resources without an account, or sign in to build yo
 - Offline files remain on the device and may be cleared by browser storage management.
 
 ### 7. Search visibility and analytics
-- Build-generated XML sitemap and robots.txt.
+- Build-generated robots.txt and XML sitemap, with a live approved-note sitemap served by the Worker.
 - Public note and subject pages with page-specific metadata, canonical URLs and structured data.
 - Permanent redirect from the legacy Workers hostname to the custom domain.
 - Optional Google Analytics 4 with opt-in consent and Cloudflare Web Analytics.
@@ -179,6 +180,7 @@ Open http://localhost:5173.
 ```bash
 npm run build
 npm run check
+node --test scripts/library.test.mjs scripts/study-pack.test.mjs
 node scripts/preflight.mjs
 npm run preview
 ```
@@ -196,7 +198,7 @@ Connect the repository to Cloudflare Workers Builds and configure the build-time
 | Deploy command | `npx wrangler deploy` |
 | Assets directory | `dist` |
 
-Configure the custom domain and update Supabase's allowed authentication redirect URLs. Rebuild after changing environment variables or when newly approved notes need to appear in the generated sitemap.
+Configure the custom domain and update Supabase's allowed authentication redirect URLs. Rebuild after changing environment variables or to refresh individual static SEO pages. The live sitemap is designed to discover newly approved notes without rebuilding.
 
 ---
 
@@ -243,24 +245,21 @@ noteshub/
 
 ---
 
-## Pre-launch roadmap
+## Launch roadmap
 
-_Last updated: November 26, 2026. Implemented features are distinct from completed production acceptance tests._
+_Last updated: November 27, 2026. User-reported acceptance testing and verified database counts are distinct from independent security testing._
 
-- [x] Core learning library and study workspace
-- [x] Moderation, reviews and bulk uploads
-- [x] PWA and selected offline PDFs
-- [x] Custom domain and production deployment
-- [x] Sitemap, robots.txt and analytics integration
-- [x] Responsive layout refinements and contributor directory implemented
-- [x] Owner/admin note deletion and moderation controls implemented
-- [ ] Verify public contributor identity and directory against production Supabase
-- [ ] Refine remaining UI and user experience
-- [ ] Expand and organize authorized learning resources
-- [ ] Complete cross-device, authentication and permissions testing
-- [ ] Review abuse prevention and operational safeguards
-- [ ] Confirm Google indexing and review search performance
-- [ ] Official release and community promotion
+- [x] Core learning library, community directory and study workspace
+- [x] Moderation, reviews, bulk uploads and starter library importer
+- [x] PWA, offline PDFs and responsive interface
+- [x] Custom domain, analytics and sitemap infrastructure
+- [x] User-reported authentication and functional testing, including Discord OAuth
+- [x] Import and approval of all 50 starter revision sheets (database verified)
+- [x] Bing live homepage inspection passed and indexing requested
+- [ ] Verify deployment and build checks for v2.2.0
+- [ ] Publish GitHub release and launch announcement
+- [ ] Monitor actual Google/Bing indexing and search performance
+- [ ] Expand learning resources, community outreach and operational safeguards
 
 ## Contributing
 
