@@ -245,22 +245,6 @@ noteshub/
 
 ---
 
-## Launch roadmap
-
-_Last updated: November 27, 2026. User-reported acceptance testing and verified database counts are distinct from independent security testing._
-
-- [x] Core learning library, community directory and study workspace
-- [x] Moderation, reviews, bulk uploads and starter library importer
-- [x] PWA, offline PDFs and responsive interface
-- [x] Custom domain, analytics and sitemap infrastructure
-- [x] User-reported authentication and functional testing, including Discord OAuth
-- [x] Import and approval of all 50 starter revision sheets (database verified)
-- [x] Bing live homepage inspection passed and indexing requested
-- [ ] Verify deployment and build checks for v2.2.0
-- [ ] Publish GitHub release and launch announcement
-- [ ] Monitor actual Google/Bing indexing and search performance
-- [ ] Expand learning resources, community outreach and operational safeguards
-
 ## Contributing
 
 Bug reports and practical suggestions are welcome through [GitHub Issues](https://github.com/nikkipandey-8599/noteshub/issues) or [website feedback](https://noteshub.tech/feedback). For substantial code changes, open an issue before submitting a pull request.
