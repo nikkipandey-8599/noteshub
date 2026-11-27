@@ -1,5 +1,5 @@
 import {normalized,validatePdf} from '../lib/library';
-import React,{createContext,useCallback,useContext,useEffect,useMemo,useState} from 'react';
+import React,{createContext,useCallback,useContext,useEffect,useMemo,useRef,useState} from 'react';
 import{configured,supabase,MAX_PDF_BYTES,slugify}from'../lib/supabase';
 import{starterNotes}from'../data/content';
 const Context=createContext(null);
@@ -15,13 +15,16 @@ export function AppProvider({children}){
  const[notes,setNotes]=useState(starterNotes),[bookmarks,setBookmarks]=useState(initialBookmarks),[collections,setCollections]=useState([]),[requests,setRequests]=useState([]);
  const[loading,setLoading]=useState(configured),[toast,setToast]=useState(null);
  const userId=session?.user?.id;
+ const accountRef=useRef(null), reloadRef=useRef(0);
+ const applySession=next=>{const id=next?.user?.id||null;if(accountRef.current!==id){accountRef.current=id;reloadRef.current++;setProfile(null);setIsAdmin(false);setCollections([]);setBookmarks(old=>old.filter(x=>String(x).startsWith('starter-')));setNotes(old=>old.filter(n=>n.status==='approved'||n.is_starter));}setSession(next)};
  const notify=(message,type='info')=>setToast({message,type,id:Date.now()});
  const clearToast=()=>setToast(null);
  useEffect(()=>{document.documentElement.dataset.theme=theme;localStorage.setItem('noteshub-theme',theme)},[theme]);
  useEffect(()=>{if(!toast)return;const timer=setTimeout(()=>setToast(null),4400);return()=>clearTimeout(timer)},[toast]);
- useEffect(()=>{if(!configured)return;supabase.auth.getSession().then(({data})=>setSession(data.session));const{data:{subscription}}=supabase.auth.onAuthStateChange((_event,next)=>setSession(next));return()=>subscription.unsubscribe()},[]);
+ useEffect(()=>{if(!configured)return;let active=true,received=false;supabase.auth.getSession().then(({data})=>{if(active&&!received)applySession(data.session)});const{data:{subscription}}=supabase.auth.onAuthStateChange((_event,next)=>{if(active){received=true;applySession(next)}});return()=>{active=false;subscription.unsubscribe()}},[]);
  const reload=useCallback(async()=>{
   if(!configured){setLoading(false);return}
+  const sequence=++reloadRef.current;
   setLoading(true);
   try{
    const [result,ratings,requestResult]=await Promise.all([
@@ -29,12 +32,13 @@ export function AppProvider({children}){
     supabase.from('ratings').select('note_id,value').limit(10000),
     supabase.from('note_requests').select('*').order('created_at',{ascending:false}).limit(60)
    ]);
+   if(sequence!==reloadRef.current)return;
    if(result.error)throw result.error;
    const totals={};for(const r of ratings.data||[]){const t=totals[r.note_id]||(totals[r.note_id]={sum:0,count:0});t.sum+=r.value;t.count++}
    setNotes([...(result.data||[]).map(n=>({...n,rating_count:totals[n.id]?.count||0,rating_average:totals[n.id]?(totals[n.id].sum/totals[n.id].count):0})),...starterNotes]);
    if(!requestResult.error)setRequests(requestResult.data||[]);
-  }catch(error){notify('Could not refresh notes: '+error.message,'error')}
-  finally{setLoading(false)}
+  }catch(error){if(sequence===reloadRef.current)notify('Could not refresh notes: '+error.message,'error')}
+  finally{if(sequence===reloadRef.current)setLoading(false)}
  },[]);
  useEffect(()=>{reload()},[reload,userId]);
 
@@ -49,8 +53,8 @@ export function AppProvider({children}){
     supabase.from('collections').select('*,collection_items(note_id)').eq('user_id',userId).order('created_at',{ascending:false}),
     supabase.from('note_requests').select('*').order('created_at',{ascending:false}).limit(60)
    ]);
-   if(cancelled)return;
-   if(pr.data)setProfile(pr.data);setIsAdmin(Boolean(ad.data));
+   if(cancelled||accountRef.current!==userId)return;
+   setProfile(pr.data||null);setIsAdmin(!ad.error&&ad.data===true);
    setBookmarks([...new Set([...(bm.data||[]).map(b=>b.note_id),...localBookmarks.filter(id=>String(id).startsWith('starter-'))])]);setCollections(co.data||[]);setRequests(rq.data||[]);
    if(pr.error)console.warn('Profile load:',pr.error.message)
   })();return()=>{cancelled=true}
@@ -64,6 +68,7 @@ export function AppProvider({children}){
   if(!requireAccount())return;
   const saved=bookmarks.includes(noteId);
   const result=saved?await supabase.from('bookmarks').delete().eq('user_id',userId).eq('note_id',noteId):await supabase.from('bookmarks').insert({user_id:userId,note_id:noteId});
+  if(accountRef.current!==userId)return;
   if(result.error){notify(result.error.message,'error');return}
   setBookmarks(old=>saved?old.filter(id=>id!==noteId):[...old,noteId]);notify(saved?'Removed from saved notes':'Added to your deck','success');
  };
@@ -97,7 +102,7 @@ export function AppProvider({children}){
   const{data,error}=await supabase.storage.from('note-pdfs').createSignedUrl(note.file_path,120);
   if(error)throw error;return data.signedUrl;
  };
- const recordDownload=async(note)=>{if(note.is_starter||!configured||!userId||note.status!=='approved')return;const {error}=await supabase.rpc('increment_note_download',{target_id:note.id});if(error)console.warn('Download counter:',error.message)};
+ const recordDownload=async(note)=>{if(note.is_starter||!configured||!userId||note.status!=='approved')return;const {error}=await supabase.rpc('increment_note_download',{target_id:note.id});if(error)console.warn('Download counter:',error.message);else if(accountRef.current===userId){const {data}=await supabase.from('notes').select('downloads').eq('id',note.id).maybeSingle();if(data&&accountRef.current===userId)setNotes(old=>old.map(n=>n.id===note.id?{...n,downloads:data.downloads}:n))}};
  const submitRating=async(noteId,rating)=>{
   if(!requireAccount())throw Error('Sign in to rate notes');
   const{error}=await supabase.from('ratings').upsert({note_id:noteId,user_id:userId,value:rating},{onConflict:'note_id,user_id'});
@@ -110,13 +115,13 @@ export function AppProvider({children}){
  };
  const saveProfile=async(updates)=>{
   if(!requireAccount())return;const{error}=await supabase.from('profiles').update(updates).eq('id',userId);if(error)throw error;
-  setProfile(old=>({...old,...updates}));notify('Profile updated.','success');
+  if(accountRef.current!==userId)return;setProfile(old=>({...old,...updates}));notify('Profile updated.','success');
  };
  const createCollection=async(name)=>{
   if(!requireAccount())throw Error('Sign in first');
   const{error}=await supabase.from('collections').insert({user_id:userId,name:name.trim()});if(error)throw error;await refreshCollections();notify('Collection created!','success');
  };
- const refreshCollections=async()=>{if(!userId)return;const{data}=await supabase.from('collections').select('*,collection_items(note_id)').eq('user_id',userId).order('created_at',{ascending:false});setCollections(data||[])};
+ const refreshCollections=async()=>{if(!userId)return;const{data}=await supabase.from('collections').select('*,collection_items(note_id)').eq('user_id',userId).order('created_at',{ascending:false});if(accountRef.current===userId)setCollections(data||[])};
  const toggleCollectionNote=async(collectionId,noteId)=>{
   if(!requireAccount())return;
   const found=collections.find(c=>c.id===collectionId)?.collection_items?.some(i=>i.note_id===noteId);
