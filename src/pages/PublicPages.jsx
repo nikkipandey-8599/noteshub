@@ -1,12 +1,12 @@
 import {subjectName,subjectSlug} from '../lib/subjects.js';
-import {categoryKey,categoryOptions,normalized} from '../lib/library';
+import {categoryKey,categoryOptions} from '../lib/library';
 import {LibrarySkeleton} from '../components/LibraryExtras';
 import{FinalReadingShelf,PublicReviewShelf}from'../upgrade/FinalPages';
 import{matchesQuery}from'../upgrade/search';
 import React,{useMemo,useState}from'react';import{Link,useNavigate,useParams,useSearchParams}from'react-router-dom';
-import{ArrowDownToLine,ArrowRight,BookMarked,BookOpen,Bookmark,ChevronDown,ChevronRight,CloudUpload,Compass,Download,Eye,FileText,Filter,GraduationCap,Heart,Layers3,Leaf,Lock,Menu,MessageCircle,Network,Plus,Search,Share2,ShieldCheck,SlidersHorizontal,Smartphone,Sparkles,Star,Upload,Users,X}from'lucide-react';
-import{useApp}from'../context/AppContext';import{features,faqs,subjects,starterNotes,colors}from'../data/content';
-import{slugify}from'../lib/supabase';import{Empty,NoteCard,Pill,Button}from'../components/UI';
+import{ArrowRight,Bookmark,CloudUpload,Eye,GraduationCap,Search,ShieldCheck,Smartphone,Sparkles,X}from'lucide-react';
+import{useApp}from'../context/AppContext';import{features,faqs,subjects,colors}from'../data/content';
+import{Empty,NoteCard}from'../components/UI';
 // The six starter subjects are examples; new subjects appear automatically after approval.
 function listSubjects(notes){
  const map=new Map(subjects.map(s=>[s.name.toLocaleLowerCase(),{...s,count:0}]));

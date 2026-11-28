@@ -1,7 +1,7 @@
 import{AnalyticsSettings}from'../upgrade/UpgradePages';
-import React,{useEffect,useMemo,useRef,useState}from'react';import{Link,useLocation,useNavigate}from'react-router-dom';
-import{Archive,ArrowDownToLine,ArrowRight,BookMarked,BookOpen,Bookmark,Check,ChevronDown,ChevronLeft,ChevronRight,CloudUpload,Command,Compass,Download,Eye,FileText,FolderHeart,GraduationCap,Heart,Home,Info,Layers3,LayoutDashboard,Menu,Moon,Plus,Search,Settings,ShieldCheck,Smartphone,Sun,Upload,UserRound,LogOut,WifiOff,X}from'lucide-react';
-import{useApp}from'../context/AppContext';import{prettyDate}from'../lib/supabase';
+import React,{useEffect,useRef,useState}from'react';import{Link,useLocation,useNavigate}from'react-router-dom';
+import{ArrowRight,BookMarked,BookOpen,Bookmark,Check,ChevronDown,ChevronLeft,CloudUpload,Download,FileText,FolderHeart,Info,LayoutDashboard,Menu,Moon,Search,ShieldCheck,Smartphone,Sun,Upload,UserRound,LogOut,X}from'lucide-react';
+import{useApp}from'../context/AppContext';
 import InstallBanner from './InstallBanner';
 import {usePWAInstall} from '../hooks/usePWAInstall';
 export function Logo({small=false}){return <Link to="/" className={'logo '+(small?'small':'')} aria-label="NotesHub home"><img src="/icons/icon-192.png" alt=""/><span>Notes<span className="logo-accent">Hub</span><i>.</i></span></Link>}

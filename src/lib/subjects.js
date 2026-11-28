@@ -1,2 +1,4 @@
 export function subjectName(value){const s=String(value||'').trim().normalize('NFC').replace(/\s+/g,' ');const aliases={'data structures & algorithms':'Data Structures','data structures and algorithms':'Data Structures','dsa':'Data Structures','cybersecurity fundamental':'Cybersecurity','cybersecurity fundamentals':'Cybersecurity','iks':'Indian Knowledge Systems'};return aliases[s.toLowerCase()]||s}
 export function subjectSlug(value){const s=subjectName(value).toLowerCase();if(/^[a-z0-9]+(?: [a-z0-9]+)*$/.test(s)&&!s.startsWith('u '))return s.replace(/ +/g,'-');return 'u-'+Array.from(s,c=>c.codePointAt(0).toString(16)).join('-')}
+
+export function mergeSubjectSuggestions(catalog=[],existing=[]){const names=new Map();for(const value of [...catalog,...existing]){const name=subjectName(value);if(name&&name.length<=80&&!names.has(name.toLowerCase()))names.set(name.toLowerCase(),name)}return [...names.values()].sort((a,b)=>a.localeCompare(b))}
