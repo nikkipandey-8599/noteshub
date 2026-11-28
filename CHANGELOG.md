@@ -1,14 +1,15 @@
 # Changelog
 
-## Unreleased — v2.3.0
+## v2.3.0 — 2026-11-28
 
 - Connect administrator-managed subject suggestions with normalized aliases.
 - Self-host existing DM Sans and Manrope fonts.
 - Add ESLint, Prettier, Playwright and live HTTP verification scripts.
 - Remove unused imports and state, preserve safe download filename sanitization.
 - Add read-only content, storage and RLS audits and correct report-only CSP for PDF previews.
-- Previously verified 11 unit tests, 7 browser tests, clean lint and production dependency audit; latest changes require repeat verification.
-- Automatic storage deletion, behavioral RLS tests, enforced CSP and production dashboard settings remain release gates.
+- Pre-merge verification: 11 unit tests, 7 browser tests, clean lint, successful build, and zero reported production or development dependency vulnerabilities.
+- Merged into main; production deployment verification remains required.
+- Automatic storage deletion, behavioral RLS tests, enforced CSP and production dashboard settings remain outstanding security follow-up items.
 
 
 ## v2.2.0 — 2026-11-27
