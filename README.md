@@ -9,7 +9,7 @@
 A calmer corner of the internet to discover, save and share free study notes.
 
 [![Live website](https://img.shields.io/badge/Live%20Website-noteshub.tech-9574D0?style=for-the-badge)](https://noteshub.tech)
-[![Status](https://img.shields.io/badge/Release-v2.2.0-22c55e?style=for-the-badge)](https://noteshub.tech)
+[![Status](https://img.shields.io/badge/Version-v2.3.0-22c55e?style=for-the-badge)](https://noteshub.tech)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite)](https://vite.dev)
 [![Supabase](https://img.shields.io/badge/Supabase-Database%20%26%20Auth-3FCF8E?style=for-the-badge&logo=supabase)](https://supabase.com)
@@ -31,9 +31,9 @@ Browse and preview approved resources without an account, or sign in to build yo
 
 > NotesHub is live and ready for its initial public launch. As verified on November 27, 2026, the production library contains 58 approved community PDFs, including 50 original introductory revision sheets, plus six built-in sample PDFs. Counts may change over time.
 
-## Release development
+## Version 2.3.0
 
-The v2.3 hardening branch adds managed subject suggestions, self-hosted DM Sans and Manrope, linting, browser tests and read-only database audits. The live release remains v2.2.0 until deployment verification. See [release gates](docs/release-2.3.md).
+Version 2.3.0 is merged into main and includes managed subject suggestions, self-hosted DM Sans and Manrope, linting, browser tests and read-only database audits. Pre-merge verification passed 11 unit tests, 7 browser tests, ESLint and npm audits with zero reported vulnerabilities. Production deployment verification and outstanding security and privacy work are tracked in the [release checklist](docs/release-2.3.md).
 
 ```sh
 npm ci
