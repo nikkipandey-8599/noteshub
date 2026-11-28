@@ -10,7 +10,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: node --test scripts/library.test.mjs scripts/study-pack.test.mjs scripts/hardening.test.mjs
+      - run: node --test scripts/*.test.mjs
       - run: npm run build
       - run: npm run check
       - run: npm audit --omit=dev --audit-level=high
