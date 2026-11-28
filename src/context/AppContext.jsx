@@ -30,13 +30,13 @@ export function AppProvider({children}){
    const pageAll=async make=>{const rows=[];for(let offset=0;;offset+=500){const r=await make().range(offset,offset+499);if(r.error)throw r.error;rows.push(...r.data);if(r.data.length<500)return {data:rows}}};
    const [result,ratings,requestResult]=await Promise.all([
     pageAll(()=>supabase.from('notes').select('*').order('created_at',{ascending:false}).order('id')),
-    pageAll(()=>supabase.from('ratings').select('note_id,value').order('note_id').order('created_at')),
+    pageAll(()=>supabase.rpc('nh_rating_summary').order('note_id')),
     supabase.from('note_requests').select('id,subject,details,author_name,created_at').order('created_at',{ascending:false}).limit(60)
    ]);
    if(sequence!==reloadRef.current)return;
    if(result.error)throw result.error;
-   const totals={};for(const r of ratings.data||[]){const t=totals[r.note_id]||(totals[r.note_id]={sum:0,count:0});t.sum+=r.value;t.count++}
-   setNotes([...(result.data||[]).map(n=>({...n,rating_count:totals[n.id]?.count||0,rating_average:totals[n.id]?(totals[n.id].sum/totals[n.id].count):0})),...starterNotes]);
+   const totals={};for(const r of ratings.data||[]){totals[r.note_id]={count:Number(r.rating_count),average:Number(r.rating_average)}}
+   setNotes([...(result.data||[]).map(n=>({...n,rating_count:totals[n.id]?.count||0,rating_average:totals[n.id]?(totals[n.id].average):0})),...starterNotes]);
    if(!requestResult.error)setRequests(requestResult.data||[]);
   }catch(error){if(sequence===reloadRef.current)notify('Could not refresh notes: '+error.message,'error')}
   finally{if(sequence===reloadRef.current)setLoading(false)}
