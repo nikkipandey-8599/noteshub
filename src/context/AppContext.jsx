@@ -12,12 +12,12 @@ export function AppProvider({children}){
  const[recentIds,setRecentIds]=useState(initialRecent);
  const recordViewed=useCallback(id=>{setRecentIds(old=>[id,...old.filter(x=>x!==id)].slice(0,12))},[]);
  const[theme,setTheme]=useState(()=>readStorage('noteshub-theme','light')==='dark'?'dark':'light');
- const[session,setSession]=useState(null),[profile,setProfile]=useState(null),[isAdmin,setIsAdmin]=useState(false);
+ const[authReady,setAuthReady]=useState(!configured),[adminReady,setAdminReady]=useState(!configured),[session,setSession]=useState(null),[profile,setProfile]=useState(null),[isAdmin,setIsAdmin]=useState(false);
  const[notes,setNotes]=useState(starterNotes),[bookmarks,setBookmarks]=useState(initialBookmarks),[collections,setCollections]=useState([]),[requests,setRequests]=useState([]);
  const[loading,setLoading]=useState(configured),[toast,setToast]=useState(null);
  const userId=session?.user?.id;
  const accountRef=useRef(null), reloadRef=useRef(0);
- const applySession=next=>{const id=next?.user?.id||null;if(accountRef.current!==id){accountRef.current=id;reloadRef.current++;setProfile(null);setIsAdmin(false);setCollections([]);setBookmarks(old=>old.filter(x=>String(x).startsWith('starter-')));setNotes(old=>old.filter(n=>n.status==='approved'||n.is_starter));}setSession(next)};
+ const applySession=next=>{const id=next?.user?.id||null;if(accountRef.current!==id){accountRef.current=id;reloadRef.current++;setAdminReady(!id);setProfile(null);setIsAdmin(false);setCollections([]);setBookmarks(old=>old.filter(x=>String(x).startsWith('starter-')));setNotes(old=>old.filter(n=>n.status==='approved'||n.is_starter));}setSession(next);setAuthReady(true)};
  const notify=(message,type='info')=>setToast({message,type,id:Date.now()});
  const clearToast=()=>setToast(null);
  useEffect(()=>{document.documentElement.dataset.theme=theme;writeStorage('noteshub-theme',theme)},[theme]);
@@ -30,8 +30,8 @@ export function AppProvider({children}){
    const pageAll=async make=>{const rows=[];for(let offset=0;;offset+=500){const r=await make().range(offset,offset+499);if(r.error)throw r.error;rows.push(...r.data);if(r.data.length<500)return {data:rows}}};
    const [result,ratings,requestResult]=await Promise.all([
     pageAll(()=>supabase.from('notes').select('*').order('created_at',{ascending:false}).order('id')),
-    pageAll(()=>supabase.from('ratings').select('note_id,value').order('note_id').order('user_id')),
-    supabase.from('note_requests').select('*').order('created_at',{ascending:false}).limit(60)
+    pageAll(()=>supabase.from('ratings').select('note_id,value').order('note_id').order('created_at')),
+    supabase.from('note_requests').select('id,subject,details,author_name,created_at').order('created_at',{ascending:false}).limit(60)
    ]);
    if(sequence!==reloadRef.current)return;
    if(result.error)throw result.error;
@@ -52,10 +52,10 @@ export function AppProvider({children}){
     supabase.rpc('is_admin'),
     supabase.from('bookmarks').select('note_id').eq('user_id',userId),
     supabase.from('collections').select('*,collection_items(note_id)').eq('user_id',userId).order('created_at',{ascending:false}),
-    supabase.from('note_requests').select('*').order('created_at',{ascending:false}).limit(60)
+    supabase.from('note_requests').select('id,subject,details,author_name,created_at').order('created_at',{ascending:false}).limit(60)
    ]);
    if(cancelled||accountRef.current!==userId)return;
-   setProfile(pr.data||null);setIsAdmin(!ad.error&&ad.data===true);
+   setProfile(pr.data||null);setIsAdmin(!ad.error&&ad.data===true);setAdminReady(true);
    setBookmarks([...new Set([...(bm.data||[]).map(b=>b.note_id),...localBookmarks.filter(id=>String(id).startsWith('starter-'))])]);setCollections(co.data||[]);setRequests(rq.data||[]);
    if(pr.error)console.warn('Profile load:',pr.error.message)
   })();return()=>{cancelled=true}
@@ -73,7 +73,7 @@ export function AppProvider({children}){
   if(result.error){notify(result.error.message,'error');return}
   setBookmarks(old=>saved?old.filter(id=>id!==noteId):[...old,noteId]);notify(saved?'Removed from saved notes':'Added to your deck','success');
  };
- const uploadNote=async({file,...metadata})=>{
+ const uploadNote=async({file,deferRefresh=false,...metadata})=>{
   if(!requireAccount())throw Error('Sign in to upload notes');
   await validatePdf(file,MAX_PDF_BYTES);
   if(metadata.title.trim().length<5||metadata.description.trim().length<10||normalized(metadata.subject).length<2)throw Error('Enter a valid title, description and subject.');
@@ -82,7 +82,7 @@ export function AppProvider({children}){
   if(uploadError)throw uploadError;
   const payload={title:metadata.title.trim(),description:metadata.description.trim(),subject:normalized(metadata.subject),course:normalized(metadata.course)||'General learning',semester:normalized(metadata.semester)||'Any level',college:metadata.college?.trim()||'',tags:metadata.tags||[],file_path:path,file_size:file.size,owner_id:userId,owner_name:'NotesHub contributor',color:metadata.color||'lavender',status:'pending'};
   const{error}=await supabase.from('notes').insert(payload);if(error){await supabase.storage.from('note-pdfs').remove([path]);throw error}
-  await reload();notify('PDF submitted! An admin will review it before publication.','success');
+  if(!deferRefresh)await reload();notify('PDF submitted! An admin will review it before publication.','success');
  };
  const editNote=async(id,data)=>{
   if(!requireAccount())return;
@@ -132,13 +132,13 @@ export function AppProvider({children}){
  const createRequest=async({subject,details})=>{
   if(!requireAccount())throw Error('Sign in first');
   const{error}=await supabase.from('note_requests').insert({user_id:userId,author_name:'Learner',subject,details});if(error)throw error;
-  const{data}=await supabase.from('note_requests').select('*').order('created_at',{ascending:false}).limit(60);setRequests(data||[]);notify('Note request posted!','success');
+  const{data}=await supabase.from('note_requests').select('id,subject,details,author_name,created_at').order('created_at',{ascending:false}).limit(60);setRequests(data||[]);notify('Note request posted!','success');
  };
  const moderate=async(id,status)=>{
   if(!isAdmin)throw Error('Admin access required');const{error}=await supabase.from('notes').update({status}).eq('id',id);if(error)throw error;
   await reload();notify('Note '+status+'.','success');
  };
  const resolveReport=async(id)=>{if(!isAdmin)throw Error('Admin access required');const{error}=await supabase.from('reports').update({resolved:true}).eq('id',id);if(error)throw error;notify('Report resolved','success')};
- const value=useMemo(()=>({configured,supabase,theme,setTheme,session,user:session?.user,profile,isAdmin,notes,bookmarks,recentIds,recordViewed,collections,requests,loading,toast,notify,clearToast,reload,requireAccount,toggleBookmark,uploadNote,editNote,deleteNote,getPdfUrl,recordDownload,submitRating,submitReport,saveProfile,createCollection,toggleCollectionNote,createRequest,moderate,resolveReport}),[theme,session,profile,isAdmin,notes,bookmarks,recentIds,recordViewed,collections,requests,loading,toast]);
+ const value=useMemo(()=>({authReady,adminReady,configured,supabase,theme,setTheme,session,user:session?.user,profile,isAdmin,notes,bookmarks,recentIds,recordViewed,collections,requests,loading,toast,notify,clearToast,reload,requireAccount,toggleBookmark,uploadNote,editNote,deleteNote,getPdfUrl,recordDownload,submitRating,submitReport,saveProfile,createCollection,toggleCollectionNote,createRequest,moderate,resolveReport}),[authReady,adminReady,theme,session,profile,isAdmin,notes,bookmarks,recentIds,recordViewed,collections,requests,loading,toast]);
  return <Context.Provider value={value}>{children}</Context.Provider>
 }

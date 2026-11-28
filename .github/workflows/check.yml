@@ -1,0 +1,16 @@
+name: Build and tests
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test scripts/library.test.mjs scripts/study-pack.test.mjs scripts/hardening.test.mjs
+      - run: npm run build
+      - run: npm run check
+      - run: npm audit --omit=dev --audit-level=high

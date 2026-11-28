@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Github, Gamepad2, Lock, Mail, UserRound } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/UI';
@@ -13,6 +13,7 @@ const PROVIDERS = [
 export function AuthPage({ register = false }) {
   const { configured, supabase, user } = useApp();
   const navigate = useNavigate();
+  const [params]=useSearchParams();const requested=params.get('next')||'';const destination=/^\/(dashboard|library|profile|upload|admin(?:\/feedback|\/bulk-upload)?)(?:\?|$)/.test(requested)?requested:'/dashboard';
   const [mode, setMode] = useState(register ? 'register' : 'login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -22,7 +23,7 @@ export function AuthPage({ register = false }) {
   const [message, setMessage] = useState('');
 
   useEffect(() => setMode(register ? 'register' : 'login'), [register]);
-  useEffect(() => { if (user) navigate('/dashboard', { replace: true }); }, [user, navigate]);
+  useEffect(() => { if (user) navigate(destination, { replace: true }); }, [user, navigate, destination]);
 
   async function socialSignIn(provider) {
     if (!configured) { setMessage('The live Supabase connection is missing. Check your environment variables.'); return; }
@@ -31,7 +32,7 @@ export function AuthPage({ register = false }) {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: `${window.location.origin}/dashboard` },
+        options: { redirectTo: `${window.location.origin}${destination}` },
       });
       if (error) throw error;
       // Supabase redirects the browser to the chosen provider.
@@ -62,13 +63,13 @@ export function AuthPage({ register = false }) {
           options: { data: { full_name: name.trim() }, emailRedirectTo: `${window.location.origin}/dashboard` },
         });
         if (error) throw error;
-        if (data.session) navigate('/dashboard');
+        if (data.session) navigate(destination);
         else setMessage('Check your email for your confirmation link, then sign in.');
         return;
       }
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      navigate('/dashboard');
+      navigate(destination);
     } catch (error) {
       setMessage(error.message || 'Something went wrong. Please try again.');
     } finally { setBusy(false); }
@@ -107,9 +108,9 @@ export function AuthPage({ register = false }) {
           <input type="email" autoComplete="email" required placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)}/>
         </div></label>
         {mode !== 'reset' && <label>Password<div className="input-wrap"><Lock size={17}/>
-          <input type={showPassword ? 'text' : 'password'} minLength={6} required
+          <input type={showPassword ? 'text' : 'password'} minLength={mode==='register'?8:6} required
             autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-            placeholder="At least 6 characters" value={password} onChange={e=>setPassword(e.target.value)}/>
+            placeholder={mode==='register'?'At least 8 characters':'Your password'} value={password} onChange={e=>setPassword(e.target.value)}/>
           <button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'}
             onClick={()=>setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button>
         </div></label>}
@@ -144,7 +145,7 @@ export function ResetPassword() {
   }
   return <div className="container reset-wrap"><h1>Set your new password</h1>
     <form onSubmit={submit} className="auth-form">
-      <label>New password<input type="password" autoComplete="new-password" minLength={6} required value={password} onChange={e=>setPassword(e.target.value)}/></label>
+      <label>New password<input type="password" autoComplete="new-password" minLength={8} required value={password} onChange={e=>setPassword(e.target.value)}/></label>
       <Button type="submit" disabled={busy}>{busy ? 'Updating...' : 'Update password'}</Button>
       <p role="status">{message}</p>
     </form>
