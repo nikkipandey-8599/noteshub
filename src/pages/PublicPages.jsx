@@ -50,18 +50,18 @@ export function Explore({subjectFilter}){
    &&(type==='all'||(type==='samples'?n.is_starter:!n.is_starter));
  }).sort((a,b)=>sort==='popular'?(b.downloads||0)-(a.downloads||0):sort==='title'?a.title.localeCompare(b.title):new Date(b.created_at)-new Date(a.created_at)),[notes,q,selected,course,level,type,sort]);
  return <div className="container listing-page">
-  <div className="listing-hero"><div><span className="kicker">YOUR OPEN LEARNING LIBRARY</span><h1>Let's find <i>your notes.</i></h1><p>Any subject. Any grade or learning path. Free original PDFs and moderated community uploads.</p></div><div className="listing-mark">✳</div></div>
+  <div className="listing-hero"><div><span className="kicker">YOUR OPEN LEARNING LIBRARY</span>{subjectFilter?<h2>Explore {subjectFilter} notes</h2>:<h1>Let's find <i>your notes.</i></h1>}<p>Any subject. Any grade or learning path. Free original PDFs and moderated community uploads.</p></div><div className="listing-mark">✳</div></div>
   <div className="filter-panel">
    <div className="filter-search"><Search size={19}/><input value={q} onChange={e=>setParam('q',e.target.value)} placeholder="Search any subject, class, course or topic..." aria-label="Search notes"/></div>
    <div className="filter-fields">
-    <label>Subject<select value={selected} onChange={e=>setParam('subject',e.target.value)}><option value="all">All subjects</option>{options('subject').map(s=><option key={s}>{s}</option>)}</select></label>
+    {!subjectFilter&&<label>Subject<select value={selected} onChange={e=>setParam('subject',e.target.value)}><option value="all">All subjects</option>{options('subject').map(s=><option key={s}>{s}</option>)}</select></label>}
     <label>Course or path<select value={course} onChange={e=>setParam('course',e.target.value)}><option value="all">Any course</option>{options('course').map(s=><option key={s}>{s}</option>)}</select></label>
     <label>Learning level<select value={level} onChange={e=>setParam('level',e.target.value)}><option value="all">All levels</option>{options('semester').map(s=><option key={s}>{s}</option>)}</select></label>
     <label>Source<select value={type} onChange={e=>setParam('type',e.target.value)}><option value="all">All notes</option><option value="community">Community uploads</option><option value="samples">Sample notes</option></select></label>
     <label>Sort by<select value={sort} onChange={e=>setParam('sort',e.target.value)}><option value="newest">Newest first</option><option value="popular">Most downloaded</option><option value="title">A to Z</option></select></label>
    </div>
   </div>
-  <div className="results-head"><div><strong>{filtered.length}</strong> {filtered.length===1?'resource':'resources'} to explore</div>{(q||selected!=='all'||course!=='all'||level!=='all'||type!=='all')&&<button className="clear-link" onClick={()=>setParams({})}>Clear filters <X size={15}/></button>}</div>
+  <div className="results-head"><div><strong>{filtered.length}</strong> {filtered.length===1?'resource':'resources'} to explore</div>{(q||(!subjectFilter&&selected!=='all')||sort!=='newest'||course!=='all'||level!=='all'||type!=='all')&&<button className="clear-link" onClick={()=>setParams({})}>Clear filters <X size={15}/></button>}</div>
   {loading?<LibrarySkeleton/>:filtered.length?<div className="notes-grid">{filtered.map((n,i)=><NoteCard note={n} key={n.id} index={i}/>)}</div>:<Empty icon={Search} title="No notes here just yet" text="Try different keywords, or request a new resource for this subject." action={<Link to="/requests" className="btn btn-outline">Request a note <ArrowRight size={16}/></Link>}/>}
   <div className="bottom-note">✳ Know something worth sharing? <Link to="/upload">Add your notes to the library.</Link></div>
  </div>
@@ -72,7 +72,8 @@ export function Subjects(){
  <div className="subject-grid large">{items.map((s,i)=><Link key={s.name} className={`subject-tile subject-${s.color}`} to={`/subjects/${s.slug}`}><span className="subject-index">{s.count} {s.count===1?'resource':'resources'}</span><div className="subject-ornament">{['✳','✺','⌘','❋','✦','◈'][i%6]}</div><h3>{s.name}</h3><p>{s.blurb||'Explore learning resources contributed by the community.'}</p><span>Explore notes <ArrowRight size={17}/></span></Link>)}</div></div>
 }
 export function SubjectDetail(){
- const{slug}=useParams(),{notes}=useApp(),subject=listSubjects(notes).find(s=>s.slug===slug);
+ const{slug}=useParams(),{notes,loading}=useApp(),subject=listSubjects(notes).find(s=>s.slug===slug);
+ if(!subject&&loading)return <LibrarySkeleton/>;
  if(!subject)return <NotFound/>;
  return <><div className={`subject-landing subject-${subject.color}`}><div className="container"><Link to="/subjects" className="text-link">← All subjects</Link><span className="kicker">OPEN STUDY SHELF</span><h1>{subject.name}<span>✳</span></h1><p>{subject.blurb||'Free shared PDFs and community notes for this topic.'}</p><Link className="btn btn-dark" to={`/explore?subject=${encodeURIComponent(subject.name)}`}>Browse {subject.name} notes <ArrowRight size={18}/></Link></div></div><div className="container subject-guide"><h2>Make your next study session easier.</h2><p>Start with a sample or approved note, read actively, and test what you learned in your own words.</p><Explore subjectFilter={subject.name}/></div></>
 }

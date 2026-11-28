@@ -1,3 +1,4 @@
+import {readStorage,writeStorage} from '../lib/safeStorage';
 import {normalized,validatePdf} from '../lib/library';
 import React,{createContext,useCallback,useContext,useEffect,useMemo,useRef,useState} from 'react';
 import{configured,supabase,MAX_PDF_BYTES,slugify}from'../lib/supabase';
@@ -10,7 +11,7 @@ export function AppProvider({children}){
  const[localBookmarks,setLocalBookmarks]=useState(initialBookmarks);
  const[recentIds,setRecentIds]=useState(initialRecent);
  const recordViewed=useCallback(id=>{setRecentIds(old=>[id,...old.filter(x=>x!==id)].slice(0,12))},[]);
- const[theme,setTheme]=useState(()=>localStorage.getItem('noteshub-theme')||'light');
+ const[theme,setTheme]=useState(()=>readStorage('noteshub-theme','light')==='dark'?'dark':'light');
  const[session,setSession]=useState(null),[profile,setProfile]=useState(null),[isAdmin,setIsAdmin]=useState(false);
  const[notes,setNotes]=useState(starterNotes),[bookmarks,setBookmarks]=useState(initialBookmarks),[collections,setCollections]=useState([]),[requests,setRequests]=useState([]);
  const[loading,setLoading]=useState(configured),[toast,setToast]=useState(null);
@@ -19,17 +20,17 @@ export function AppProvider({children}){
  const applySession=next=>{const id=next?.user?.id||null;if(accountRef.current!==id){accountRef.current=id;reloadRef.current++;setProfile(null);setIsAdmin(false);setCollections([]);setBookmarks(old=>old.filter(x=>String(x).startsWith('starter-')));setNotes(old=>old.filter(n=>n.status==='approved'||n.is_starter));}setSession(next)};
  const notify=(message,type='info')=>setToast({message,type,id:Date.now()});
  const clearToast=()=>setToast(null);
- useEffect(()=>{document.documentElement.dataset.theme=theme;localStorage.setItem('noteshub-theme',theme)},[theme]);
+ useEffect(()=>{document.documentElement.dataset.theme=theme;writeStorage('noteshub-theme',theme)},[theme]);
  useEffect(()=>{if(!toast)return;const timer=setTimeout(()=>setToast(null),4400);return()=>clearTimeout(timer)},[toast]);
  useEffect(()=>{if(!configured)return;let active=true,received=false;supabase.auth.getSession().then(({data})=>{if(active&&!received)applySession(data.session)});const{data:{subscription}}=supabase.auth.onAuthStateChange((_event,next)=>{if(active){received=true;applySession(next)}});return()=>{active=false;subscription.unsubscribe()}},[]);
  const reload=useCallback(async()=>{
   if(!configured){setLoading(false);return}
   const sequence=++reloadRef.current;
-  setLoading(true);
   try{
+   const pageAll=async make=>{const rows=[];for(let offset=0;;offset+=500){const r=await make().range(offset,offset+499);if(r.error)throw r.error;rows.push(...r.data);if(r.data.length<500)return {data:rows}}};
    const [result,ratings,requestResult]=await Promise.all([
-    supabase.from('notes').select('*').order('created_at',{ascending:false}).limit(300),
-    supabase.from('ratings').select('note_id,value').limit(10000),
+    pageAll(()=>supabase.from('notes').select('*').order('created_at',{ascending:false}).order('id')),
+    pageAll(()=>supabase.from('ratings').select('note_id,value').order('note_id').order('user_id')),
     supabase.from('note_requests').select('*').order('created_at',{ascending:false}).limit(60)
    ]);
    if(sequence!==reloadRef.current)return;
@@ -59,8 +60,8 @@ export function AppProvider({children}){
    if(pr.error)console.warn('Profile load:',pr.error.message)
   })();return()=>{cancelled=true}
  },[userId]);
- useEffect(()=>{localStorage.setItem('noteshub-bookmarks',JSON.stringify(localBookmarks))},[localBookmarks]);
- useEffect(()=>{localStorage.setItem('noteshub-recent',JSON.stringify(recentIds))},[recentIds]);
+ useEffect(()=>{writeStorage('noteshub-bookmarks',JSON.stringify(localBookmarks))},[localBookmarks]);
+ useEffect(()=>{writeStorage('noteshub-recent',JSON.stringify(recentIds))},[recentIds]);
  useEffect(()=>{if(configured)setBookmarks(old=>[...new Set([...old.filter(id=>!String(id).startsWith('starter-')),...localBookmarks.filter(id=>String(id).startsWith('starter-'))])])},[configured,localBookmarks]);
  const requireAccount=()=>{if(!configured){notify('Connect Supabase to enable real accounts and community uploads.','warning');return false}if(!userId){notify('Sign in to use this feature.','warning');return false}return true};
  const toggleBookmark=async noteId=>{
@@ -130,7 +131,7 @@ export function AppProvider({children}){
  };
  const createRequest=async({subject,details})=>{
   if(!requireAccount())throw Error('Sign in first');
-  const{error}=await supabase.from('note_requests').insert({user_id:userId,author_name:profile?.display_name||'Student',subject,details});if(error)throw error;
+  const{error}=await supabase.from('note_requests').insert({user_id:userId,author_name:'Learner',subject,details});if(error)throw error;
   const{data}=await supabase.from('note_requests').select('*').order('created_at',{ascending:false}).limit(60);setRequests(data||[]);notify('Note request posted!','success');
  };
  const moderate=async(id,status)=>{
