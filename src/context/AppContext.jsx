@@ -1,3 +1,4 @@
+import {subjectName} from '../lib/subjects.js';
 import {readStorage,writeStorage} from '../lib/safeStorage';
 import {normalized,validatePdf} from '../lib/library';
 import React,{createContext,useCallback,useContext,useEffect,useMemo,useRef,useState} from 'react';
@@ -80,13 +81,13 @@ export function AppProvider({children}){
   const path=`${userId}/${crypto.randomUUID()}-${slugify(file.name.replace(/\.pdf$/i,''))}.pdf`;
   const{error:uploadError}=await supabase.storage.from('note-pdfs').upload(path,file,{contentType:'application/pdf',cacheControl:'3600',upsert:false});
   if(uploadError)throw uploadError;
-  const payload={title:metadata.title.trim(),description:metadata.description.trim(),subject:normalized(metadata.subject),course:normalized(metadata.course)||'General learning',semester:normalized(metadata.semester)||'Any level',college:metadata.college?.trim()||'',tags:metadata.tags||[],file_path:path,file_size:file.size,owner_id:userId,owner_name:'NotesHub contributor',color:metadata.color||'lavender',status:'pending'};
+  const payload={title:metadata.title.trim(),description:metadata.description.trim(),subject:subjectName(metadata.subject),course:normalized(metadata.course)||'General learning',semester:normalized(metadata.semester)||'Any level',college:metadata.college?.trim()||'',tags:metadata.tags||[],file_path:path,file_size:file.size,owner_id:userId,owner_name:'NotesHub contributor',color:metadata.color||'lavender',status:'pending'};
   const{error}=await supabase.from('notes').insert(payload);if(error){await supabase.storage.from('note-pdfs').remove([path]);throw error}
   if(!deferRefresh)await reload();notify('PDF submitted! An admin will review it before publication.','success');
  };
  const editNote=async(id,data)=>{
   if(!requireAccount())return;
-  const{error}=await supabase.from('notes').update({title:data.title,description:data.description,subject:normalized(data.subject),course:normalized(data.course)||'General learning',semester:normalized(data.semester)||'Any level',college:data.college?.trim()||'',tags:data.tags,color:data.color}).eq('id',id);
+  const{error}=await supabase.from('notes').update({title:data.title,description:data.description,subject:subjectName(data.subject),course:normalized(data.course)||'General learning',semester:normalized(data.semester)||'Any level',college:data.college?.trim()||'',tags:data.tags,color:data.color}).eq('id',id);
   if(error)throw error;await reload();notify('Changes saved; note returned to review queue.','success');
  };
  const deleteNote=async(note)=>{

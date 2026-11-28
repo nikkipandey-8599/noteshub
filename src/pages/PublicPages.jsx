@@ -1,3 +1,4 @@
+import {subjectName,subjectSlug} from '../lib/subjects.js';
 import {categoryKey,categoryOptions,normalized} from '../lib/library';
 import {LibrarySkeleton} from '../components/LibraryExtras';
 import{FinalReadingShelf,PublicReviewShelf}from'../upgrade/FinalPages';
@@ -11,8 +12,8 @@ function listSubjects(notes){
  const map=new Map(subjects.map(s=>[s.name.toLocaleLowerCase(),{...s,count:0}]));
  for(const n of notes){
   if(n.status!=='approved'||!n.subject?.trim())continue;
-  const key=categoryKey(n.subject);
-  if(!map.has(key))map.set(key,{name:normalized(n.subject),slug:slugify(n.subject)||encodeURIComponent(n.subject.trim()),color:colors[map.size%colors.length],blurb:'Community learning notes on '+n.subject.trim()+'.',count:0});
+  const key=categoryKey(subjectName(n.subject));
+  if(!map.has(key))map.set(key,{name:subjectName(n.subject),slug:subjectSlug(n.subject),color:colors[map.size%colors.length],blurb:'Community learning notes on '+n.subject.trim()+'.',count:0});
   map.get(key).count++;
  }
  return [...map.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
@@ -39,12 +40,12 @@ export function Explore({subjectFilter}){
  const sort=params.get('sort')||'newest';
  const type=params.get('type')||'all';
  const published=notes.filter(n=>n.status==='approved');
- const options=(field)=>categoryOptions(published,field);
+ const options=(field)=>categoryOptions(field==='subject'?published.map(n=>({...n,subject:subjectName(n.subject)})):published,field);
  const setParam=(key,v)=>{const updated=new URLSearchParams(params);if(v==='all'||!v)updated.delete(key);else updated.set(key,v);if(key==='level')updated.delete('semester');setParams(updated)};
  const filtered=useMemo(()=>published.filter(n=>{
   const haystack=[n.title,n.description,n.subject,n.course,n.semester,n.college,...(n.tags||[])].join(' ').toLocaleLowerCase();
   return (!q||matchesQuery(haystack,q))
-   &&(selected==='all'||categoryKey(n.subject)===categoryKey(selected))
+   &&(selected==='all'||categoryKey(subjectName(n.subject))===categoryKey(subjectName(selected)))
    &&(course==='all'||categoryKey(n.course)===categoryKey(course))
    &&(level==='all'||categoryKey(n.semester)===categoryKey(level))
    &&(type==='all'||(type==='samples'?n.is_starter:!n.is_starter));
