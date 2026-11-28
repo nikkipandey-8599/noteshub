@@ -135,8 +135,8 @@ export function AppProvider({children}){
   const{error}=await supabase.from('note_requests').insert({user_id:userId,author_name:'Learner',subject,details});if(error)throw error;
   const{data}=await supabase.from('note_requests').select('id,subject,details,author_name,created_at').order('created_at',{ascending:false}).limit(60);setRequests(data||[]);notify('Note request posted!','success');
  };
- const moderate=async(id,status)=>{
-  if(!isAdmin)throw Error('Admin access required');const{error}=await supabase.from('notes').update({status}).eq('id',id);if(error)throw error;
+ const moderate=async(id,status,reason='')=>{
+  if(!isAdmin)throw Error('Admin access required');const{error}=await supabase.from('notes').update({status,rejection_reason:status==='rejected'?reason:''}).eq('id',id);if(error)throw error;
   await reload();notify('Note '+status+'.','success');
  };
  const resolveReport=async(id)=>{if(!isAdmin)throw Error('Admin access required');const{error}=await supabase.from('reports').update({resolved:true}).eq('id',id);if(error)throw error;notify('Report resolved','success')};
