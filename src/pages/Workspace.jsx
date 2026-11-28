@@ -1,3 +1,4 @@
+import {mergeSubjectSuggestions} from '../lib/subjects.js';
 import {AdminMaintenance} from '../components/AdminMaintenance.jsx';
 import {PublicIdentitySettings} from '../components/LibraryExtras';
 import React,{useEffect,useMemo,useRef,useState}from'react';import{Link,useNavigate}from'react-router-dom';import{ArrowDownToLine,ArrowRight,BookMarked,Bookmark,Check,CheckCircle2,CloudUpload,FileText,Folder,FolderHeart,FolderPlus,HardDrive,Heart,Info,LayoutDashboard,LogOut,Plus,Search,Settings,Shield,ShieldCheck,Star,Trash2,Upload,UserRound,X}from'lucide-react';import{DashShell,Empty,NoteCard,Pill,Button,Status}from'../components/UI';import{useApp}from'../context/AppContext';import{colors}from'../data/content';import{MAX_PDF_BYTES,fileSize,prettyDate}from'../lib/supabase';
@@ -9,7 +10,10 @@ export function UploadPage(){
  const[form,setForm]=useState(initial);
  const set=(key,value)=>setForm(old=>({...old,[key]:value}));
  const mine=a.notes.filter(n=>n.owner_id===a.user?.id&&!n.is_starter);
- const suggestedSubjects=[...new Set(a.notes.map(n=>n.subject).filter(Boolean))].sort();
+ const [catalog,setCatalog]=useState([]);
+  const client=a.supabase;
+  useEffect(()=>{if(!a.configured||!client)return;let active=true;async function load(){try{const {data,error}=await client.from('nh_subject_catalog').select('name').order('name');if(active&&!error)setCatalog((data||[]).map(row=>row.name))}catch{/* Existing note suggestions remain available. */}}load();return()=>{active=false}},[a.configured,client]);
+  const suggestedSubjects=mergeSubjectSuggestions(catalog,a.notes.map(n=>n.subject));
  const suggestedLevels=['Class 1','Class 5','Class 9','Class 10','Class 11','Class 12','Year 1','Year 2','Year 3','Semester 1','Semester 2','Semester 3','Beginner','Intermediate','Advanced','Self-study','Any level'];
  const onFiles=files=>{const candidate=files?.[0];if(!candidate)return;
   if(!candidate.name.toLowerCase().endsWith('.pdf')||candidate.type!=='application/pdf'){setError('Only PDF documents are supported.');return}
