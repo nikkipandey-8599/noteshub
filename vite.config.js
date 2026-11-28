@@ -31,6 +31,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [
+  /^\/notes\//,
+  /^\/subjects\//,
   /^\/samples\//,
   /^\/robots\.txt(?:\?.*)?$/,
   /^\/sitemap\.xml(?:\?.*)?$/,

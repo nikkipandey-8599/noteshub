@@ -1,4 +1,4 @@
 import fs from 'node:fs';import path from 'node:path';
-const must=['dist/index.html','dist/community/index.html','dist/manifest.webmanifest','dist/sw.js','dist/robots.txt','dist/sitemap.xml','dist/subjects/data-structures/index.html','dist/samples/python.pdf','dist/icons/icon-192.png'];
+const must=['dist/index.html','dist/nh-app-shell.html','dist/community/index.html','dist/manifest.webmanifest','dist/sw.js','dist/robots.txt','dist/sitemap.xml','dist/subjects/data-structures/index.html','dist/samples/python.pdf','dist/icons/icon-192.png'];
 for(const p of must){if(!fs.existsSync(p)){console.error('MISSING:',p);process.exitCode=1}else{console.log('OK',p,fs.statSync(p).size+' bytes')}}
 if(fs.existsSync('dist/community/index.html')){const html=fs.readFileSync('dist/community/index.html','utf8');if(!html.includes('Study Notes Contributors')||!html.includes('/community"')){console.error('Community SEO metadata missing');process.exitCode=1}}
